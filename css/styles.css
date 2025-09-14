@@ -8,22 +8,38 @@
   --border:#1f2a44;
 }
 
-body {
+html, body { height: 100%; }
+
+body{
   font-family: Arial, sans-serif;
   margin: 0; padding: 0;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
 }
+
 header {
   background: #1976d2; color: white;
   padding:.75rem 1rem;
   position:sticky;top:0;z-index:10
   border-bottom:1px solid var(--border);
 }
+
 nav a {
   color: white; margin-right: 1em;
   text-decoration: none;
 }
-main { padding: 1em; }
-form { display: flex; flex-direction: column; gap: 0.5em; }
+
+main {
+  padding: 1em;
+  flex:1 0 auto;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
 
 .toolbar{
   display:flex;
@@ -42,4 +58,13 @@ form { display: flex; flex-direction: column; gap: 0.5em; }
   margin:0 1rem 0 0;
   color:#e6eefc;
   opacity:.92
+}
+
+footer{
+  margin-top:auto;
+  padding:.0rem .75rem;
+  background:var(--panel);
+  border-top:1px solid var(--border);
+  color:var(--muted);
+  font-size:.85rem;
 }
