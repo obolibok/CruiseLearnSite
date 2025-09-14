@@ -172,6 +172,8 @@
           const e = params.event;
           if (!e) return false;
           // НЕ трогаем Enter — за него отвечают флаги выше
+          // не трогаем Ctrl+C / Ctrl+V
+          if (e.ctrlKey && (e.key === 'c' || e.key === 'v')) return false;
           // Глотаем ctrl-навигацию/Del, чтобы браузер/грид не вмешивались
           if (e.ctrlKey && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Delete'].includes(e.key)) {
             e.preventDefault(); e.stopPropagation();
@@ -186,6 +188,28 @@
       animateRows: false,
       rowHeight: 30,
       getRowClass: p => rowHasErrors(p.data) ? 'row-invalid' : undefined,
+
+      rowSelection: {
+        mode: 'singleRow',
+        copySelectedRows: false // ← оставляем фокус на копировании ячеек (Ctrl+C)
+      },
+      suppressClipboardPaste: false,          // явно разрешаем paste
+      clipboardDelimiter: '\t',               // табы как в Excel/Sheets
+      // НЕ копируем/вставляем в «недоступные» поля (в т.ч. слитые/NA и Structure)
+      processCellForClipboard: (p) => {
+        const data = p.node?.data || {};
+        const field = p.column.getColId();
+        const allowed = data.type === 'chapter' ? COLS.chapter : COLS.topic;
+        if (field === 'structure' || !allowed.includes(field)) return ''; // NA/Structure → пусто
+        return p.value ?? '';
+      },
+      processCellFromClipboard: (p) => {
+        const data = p.node?.data || {};
+        const field = p.column.getColId();
+        const allowed = data.type === 'chapter' ? COLS.chapter : COLS.topic;
+        if (!allowed.includes(field)) return data[field]; // блокируем paste в не-редактируемые
+        return p.value;                                   // обычная вставка
+      },
 
       isExternalFilterPresent: () => collapsed.size > 0,
       doesExternalFilterPass: node => {
@@ -209,6 +233,10 @@
     };
 
     const api = agGrid.createGrid(gridDiv, gridOptions);
+    // Clipboard handlers (robust copy/cut/paste)
+    gridDiv.addEventListener('copy', onCopy);
+    gridDiv.addEventListener('cut', onCut);
+    gridDiv.addEventListener('paste', onPaste);
     const DEBUG = false;
     const dbg = (...a) => { if (DEBUG) console.log('[editor]', ...a); };
     gridOptions.api = api;
@@ -642,6 +670,77 @@
       return { errors, first };
     }
 
+function allowedFieldForRow(rowData, field){
+  if (field === 'structure') return false;
+  const allowed = rowData.type === 'chapter' ? COLS.chapter : COLS.topic;
+  return allowed.includes(field);
+}
+
+function onCopy(e){
+  const f = api.getFocusedCell();
+  if (!f) return; // нет фокуса на решётке — отдать браузеру
+  const node = api.getDisplayedRowAtIndex(f.rowIndex);
+  if (!node) return;
+  const field = f.column.getColId();
+  const row = node.data || {};
+  if (!allowedFieldForRow(row, field)) return; // «серые»/Structure не копируем
+
+  const val = row[field] ?? '';
+  e.clipboardData.setData('text/plain', String(val));
+  e.preventDefault(); // мы всё сделали сами
+}
+
+function onCut(e){
+  onCopy(e); // скопировали
+  const f = api.getFocusedCell();
+  if (!f) return;
+  const node = api.getDisplayedRowAtIndex(f.rowIndex);
+  if (!node) return;
+  const field = f.column.getColId();
+  const row = node.data || {};
+  if (!allowedFieldForRow(row, field)) return;
+  node.setDataValue(field, ''); // очистили
+}
+
+function onPaste(e){
+  const text = e.clipboardData.getData('text/plain');
+  if (!text) return;
+
+  const f = api.getFocusedCell();
+  if (!f) return;
+  const startNode = api.getDisplayedRowAtIndex(f.rowIndex);
+  if (!startNode) return;
+  const startField = f.column.getColId();
+
+  // Если ячейка недоступна — не вставляем
+  if (!allowedFieldForRow(startNode.data, startField)){
+    e.preventDefault();
+    return;
+  }
+
+  // Поддержим и одиночное значение, и «матрицу» (таб/переносы строк)
+  const lines = text.replace(/\r/g,'').split('\n');
+  const rowsParsed = lines.filter(l => l.length>0).map(l => l.split('\t'));
+
+  // Карта видимых колонок, чтобы пастить вправо
+  const visibleCols = api.getAllDisplayedColumns().map(c => c.getColId());
+  const startColIdx = visibleCols.indexOf(startField);
+
+  for (let r = 0; r < rowsParsed.length; r++){
+    const rowNode = api.getDisplayedRowAtIndex(f.rowIndex + r);
+    if (!rowNode) break;
+    const rowData = rowNode.data;
+
+    for (let c = 0; c < rowsParsed[r].length; c++){
+      const colId = visibleCols[startColIdx + c];
+      if (!colId) break;
+      if (!allowedFieldForRow(rowData, colId)) continue; // пропускаем «серые»/чужие поля
+      rowNode.setDataValue(colId, rowsParsed[r][c]);
+    }
+  }
+
+  e.preventDefault(); // не отдаём событие дальше
+}
     // Demo: ?demo=1
     if (location.search.includes('demo')){
       const demo = {"type":"chapter_collection","version":1,"exportedAt":"2025-08-07T20:21:32Z","chapters":[{"primaryLanguage":"de","secondaryLanguage":"ru","name":"Begrüßungen","description":"Изучаем немецкие приветствия","metadata":"{\"authors\":[\"Cruise Learn\"],\"tags\":[\"приветствия\"]}","topics":[{"primaryText":"Guten Tag","primaryTextSpeech":"Guten Tag","secondaryText":"Добрый день","secondaryTextSpeech":"Добрый день","description":"Стандартное приветствие в течение дня","metadata":"{\"tags\":[\"формальное\"]}","subtopics":[]},{"primaryText":"Guten Morgen","primaryTextSpeech":"Guten Morgen","secondaryText":"Доброе утро","secondaryTextSpeech":"Доброе утро","description":"Утреннее приветствие","metadata":"{\"tags\":[\"утро\"]}","subtopics":[{"primaryText":"Schönen Morgen!","primaryTextSpeech":"Schönen Morgen!","secondaryText":"Прекрасного утра!","secondaryTextSpeech":"Прекрасного утра!","description":"Дополнение к 'Guten Morgen'","metadata":"{\"tags\":[\"вариация\"]}"}]},{"primaryText":"Hallo","primaryTextSpeech":"Hallo","secondaryText":"Привет","secondaryTextSpeech":"Привет","description":"Неформальное приветствие","metadata":"{\"tags\":[\"неформальное\"]}","subtopics":[]}]}]};
