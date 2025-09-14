@@ -1,0 +1,45 @@
+:root{
+  --bg:#0b1220;
+  --panel:#131a2a;
+  --muted:#8fa1c9;
+  --accent:#4cc9f0;
+  --danger:#ff5d5d;
+  --ok:#5dd39e;
+  --border:#1f2a44;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0; padding: 0;
+}
+header {
+  background: #1976d2; color: white;
+  padding:.75rem 1rem;
+  position:sticky;top:0;z-index:10
+  border-bottom:1px solid var(--border);
+}
+nav a {
+  color: white; margin-right: 1em;
+  text-decoration: none;
+}
+main { padding: 1em; }
+form { display: flex; flex-direction: column; gap: 0.5em; }
+
+.toolbar{
+  display:flex;
+  flex-direction: column;
+  gap:.5rem;
+  align-items: flex-start;
+  padding:.75rem 1rem;
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  position:sticky;
+  top:0;
+  z-index:10
+}
+.toolbar h1{
+  font-size:1rem;
+  margin:0 1rem 0 0;
+  color:#e6eefc;
+  opacity:.92
+}
