@@ -64,7 +64,7 @@
     <label class="btn" for="fileInput">Import</label>
     <input id="fileInput" type="file" accept="application/json" hidden>
     <button class="btn" id="btnExport">Export</button>
-
+    <button class="btn" id="btnExportCsv">Export CSV</button>
     <div class="spacer"></div>
 
     <button class="btn" id="btnAddChapter">+ Chapter</button>
@@ -741,12 +741,56 @@ function onPaste(e){
 
   e.preventDefault(); // не отдаём событие дальше
 }
+
     // Demo: ?demo=1
     if (location.search.includes('demo')){
       const demo = {"type":"chapter_collection","version":1,"exportedAt":"2025-08-07T20:21:32Z","chapters":[{"primaryLanguage":"de","secondaryLanguage":"ru","name":"Begrüßungen","description":"Изучаем немецкие приветствия","metadata":"{\"authors\":[\"Cruise Learn\"],\"tags\":[\"приветствия\"]}","topics":[{"primaryText":"Guten Tag","primaryTextSpeech":"Guten Tag","secondaryText":"Добрый день","secondaryTextSpeech":"Добрый день","description":"Стандартное приветствие в течение дня","metadata":"{\"tags\":[\"формальное\"]}","subtopics":[]},{"primaryText":"Guten Morgen","primaryTextSpeech":"Guten Morgen","secondaryText":"Доброе утро","secondaryTextSpeech":"Доброе утро","description":"Утреннее приветствие","metadata":"{\"tags\":[\"утро\"]}","subtopics":[{"primaryText":"Schönen Morgen!","primaryTextSpeech":"Schönen Morgen!","secondaryText":"Прекрасного утра!","secondaryTextSpeech":"Прекрасного утра!","description":"Дополнение к 'Guten Morgen'","metadata":"{\"tags\":[\"вариация\"]}"}]},{"primaryText":"Hallo","primaryTextSpeech":"Hallo","secondaryText":"Привет","secondaryTextSpeech":"Привет","description":"Неформальное приветствие","metadata":"{\"tags\":[\"неформальное\"]}","subtopics":[]}]}]};
       api.setGridOption('rowData', importChapterCollection(demo));
       collapsed.clear(); recomputeHasChildren(); api.onFilterChanged();
     }
+
+// === CSV Export ===
+(function(){
+  function csvEscape(v){ if (v == null) v = ''; v = String(v); return '"' + v.replace(/"/g,'""') + '"'; }
+  function structureText(data){
+    const level = (data.path?.length || 1) - 1;
+    const baseName = data.type === 'chapter' ? (data.name || '') : (data.primaryText || '');
+    const indent = '  '.repeat(Math.max(0, level));
+    return indent + baseName;
+  }
+  function buildCsvFromGrid(){
+    const cols = gridOptions.api.getAllDisplayedColumns();
+    const headers = cols.map(c => (c.getColDef().headerName || c.getColId()));
+    const out = [ headers.map(csvEscape).join(',') ];
+    gridOptions.api.forEachNodeAfterFilterAndSort(n => {
+      const row = n.data || {};
+      const allowed = row.type === 'chapter' ? COLS.chapter : COLS.topic;
+      const vals = cols.map(col => {
+        const colId = col.getColId();
+        const colDef = col.getColDef();
+        if (colId === 'structure') return csvEscape(structureText(row));
+        const field = colDef.field;
+        if (!field) return csvEscape('');
+        if (!allowed.includes(field)) return csvEscape(''); // «серые»/недоступные колонки — пусто
+        return csvEscape(row[field] ?? '');
+      });
+      out.push(vals.join(','));
+    });
+    return "\uFEFF" + out.join('\r\n'); // BOM для корректного открытия в Excel на Windows
+  }
+  const btn = document.getElementById('btnExportCsv');
+  if (btn){
+    btn.addEventListener('click', () => {
+      const csv = buildCsvFromGrid();
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const ts = new Date().toISOString().slice(0,19).replace(/[T:]/g,'-');
+      a.download = `content_export_${ts}.csv`;
+      a.click();
+    });
+  }
+})();
   </script>
 </body>
 </html>
