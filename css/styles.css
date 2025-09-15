@@ -8,10 +8,14 @@
   --border:#1f2a44;
 }
 
-html, body { height: 100%; }
+html,body{height:100%;margin:0}
 
 body{
-  font-family: Arial, sans-serif;
+/*
+  background:var(--bg);
+  color:#e6eefc;
+*/
+  font-family:Inter, system-ui, Segoe UI, Roboto, Arial, sans-serif;
   margin: 0; padding: 0;
   min-height:100vh;
   display:flex;
@@ -41,7 +45,7 @@ form {
   gap: 0.5em;
 }
 
-.toolbar{
+.page_header{
   display:flex;
   flex-direction: column;
   gap:.5rem;
@@ -53,11 +57,60 @@ form {
   top:0;
   z-index:10
 }
+.page_header h1{
+  font-size:1rem;
+  margin:0 1rem 0 0;
+  color:#e6eefc;
+  opacity:.92
+}
+
+.toolbar{
+  display:flex;gap:.5rem;align-items:center;padding:.75rem 1rem;
+  background:var(--panel);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:10
+}
 .toolbar h1{
   font-size:1rem;
   margin:0 1rem 0 0;
   color:#e6eefc;
   opacity:.92
+}
+
+.btn{
+  border:1px solid #2a3658;background:#182136;color:#e6eefc;
+  padding:.45rem .75rem;border-radius:.7rem;cursor:pointer;user-select:none;display:block;font-size:12px
+}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:#21405a;border-color:var(--accent)}
+.btn.danger{border-color:#ff7a7a;background:#3a1d24}
+.btn.danger:hover{border-color:#ff0000}
+.btn.ok{border-color:var(--ok);background:#1f3a2f}
+.spacer{flex:1}
+.hint{font-size:.85rem;color:var(--muted);margin-left:.25rem}
+
+#grid{height:calc(100vh - 64px)}
+/* Compact grid */
+#grid{font-size:12px}
+#grid .ag-cell{padding-top:0px !important;padding-bottom:2px !important}
+#grid .ag-center-cols-container .ag-cell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#grid .ag-row{line-height:1}
+.cell-disabled{opacity:.35;pointer-events:none}
+.caret{cursor:pointer;display:inline-block;width:1em;text-align:center;margin-right:.25rem}
+/* Errors highlight */
+#grid .ag-cell.invalid{
+  background: rgba(255,93,93,0.12);
+  box-shadow: inset 0 -1px 0 rgba(255,93,93,0.35);
+}
+#grid .ag-row.row-invalid .ag-cell[col-id="structure"]{
+  border-left: 3px solid #ff5d5d;
+}
+#grid .ag-cell.na-span{
+  background: rgba(100,100,100,0.08);
+  text-align: center;
+  font-style: italic;
+}
+#grid .ag-cell.struct-dim{
+  background: rgba(200,200,200,0.08);
 }
 
 footer{
