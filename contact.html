@@ -89,7 +89,7 @@
         </div>
 
         <!-- hCaptcha: replace with your site key -->
-        <div class="h-captcha" data-sitekey="2c2a40d8-8bb0-4f9a-b760-0a14be684a7e"></div>
+        <div class="h-captcha" data-captcha="true"></div>
 
         <div class="actions">
           <button class="btn" id="send-btn" type="submit" disabled>Send</button>
@@ -113,7 +113,6 @@
   </footer>
 
   <!-- hCaptcha -->
-  <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 
   <script>
     // fill referrer
@@ -168,7 +167,7 @@
           box.className = 'status ok';
           form.reset();
           if (window.hcaptcha && typeof hcaptcha.reset === 'function') {
-            hcaptcha.reset();
+            if (window.hcaptcha && typeof hcaptcha.reset === "function") { hcaptcha.reset(); }
           }
         } else {
           throw new Error(data.message || 'Failed to send the form.');
@@ -182,5 +181,6 @@
       }
     });
   </script>
+  <script src="https://web3forms.com/client/script.js" async defer></script>
 </body>
 </html>
