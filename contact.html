@@ -8,8 +8,9 @@
   <style>
     /* Small, local styles for the form (work with your theme variables) */
     .contact-card{
-      max-width: 720px; margin: 1rem 0 1rem 0; padding: 1rem;
-      
+      max-width: 720px;
+      margin: 1rem 0 1rem 0;
+      padding: 0;
       box-shadow: 0 1px 2px rgba(0,0,0,.06);
     }
     .contact-card h2{margin: .25rem 0 1rem; font-size: 1.4rem; }
@@ -43,6 +44,7 @@
     <h1>Cruise Learn</h1>
     <nav>
       <a href="index.html">Home</a>
+      <a href="help.html">Help</a>
       <a href="editor.html">Content Editor</a>
       <a href="privacy.html">Privacy</a>
       <a href="contact.html">Contact</a>
@@ -53,20 +55,13 @@
     <h2>Contact us</h2>
     <p>Have a question, bug report or partnership idea? Send us a message below.</p>
     <div class="contact-card" role="form" aria-labelledby="contact-title">
-
       <form id="contact-form" class="contact-form" action="https://api.web3forms.com/submit" method="POST" novalidate>
-        <!-- Required Web3Forms key -->
         <input type="hidden" name="access_key" value="7b2de2fe-0857-45bf-9f59-433cc706a293">
-
-        <!-- Optional helper fields -->
         <input type="hidden" name="project" value="Cruise Learn Website">
         <input type="hidden" name="referrer" id="referrer-field" value="">
-
-        <!-- Honeypot -->
         <div class="hp-wrap" aria-hidden="true">
           <label>Leave this field empty: <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
         </div>
-
         <div class="grid-2">
           <div>
             <label for="name">Your name</label>
@@ -77,28 +72,21 @@
             <input type="email" id="email" name="email" placeholder="john@example.com" autocomplete="email" required>
           </div>
         </div>
-
         <div>
           <label for="subject">Subject</label>
           <input type="text" id="subject" name="subject" placeholder="Question about the Android app">
         </div>
-
         <div>
           <label for="message">Message</label>
           <textarea id="message" name="message" placeholder="Briefly describe your question or idea" required></textarea>
         </div>
-
-        <!-- hCaptcha: replace with your site key -->
         <div class="h-captcha" data-captcha="true"></div>
-
         <div class="actions">
           <button class="btn" id="send-btn" type="submit" disabled>Send</button>
           <span class="note">Protected by hCaptcha • spam-free</span>
         </div>
-
         <div id="form-status" class="status" aria-live="polite" role="status"></div>
       </form>
-
     </div>
     <p>
       Or email us directly: <a href="mailto:cruiselearnapp@gmail.com">cruiselearnapp@gmail.com</a>
@@ -111,8 +99,6 @@
   <footer>
     <p>© 2025 Cruise Learn</p>
   </footer>
-
-  <!-- hCaptcha -->
 
   <script>
     // fill referrer
@@ -133,35 +119,26 @@
     };
     form.addEventListener('input', maybeEnable);
 
-    // submit with fetch, keep user on page
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       box.textContent = '';
       btn.disabled = true;
-
       if (!form.reportValidity()) { btn.disabled = false; return; }
-
       try {
         const DEFAULT_SUBJECT = 'New message from Cruise Learn site';
-      
-        // собрать данные формы
         const fd = new FormData(form);
-        // ensure hCaptcha is solved
         if (!fd.get('h-captcha-response')) {
           box.textContent = 'Please complete the hCaptcha to continue.';
           box.className = 'status err';
           btn.disabled = false;
           return;
         }
-        // если тема пустая или поля subject нет — проставить по умолчанию
         const s = fd.get('subject');
         if (!s || !String(s).trim()) {
           fd.set('subject', DEFAULT_SUBJECT);
         }
-      
         const resp = await fetch(form.action, { method: 'POST', body: fd });
         const data = await resp.json().catch(() => ({}));
-      
         if (resp.ok && (data.success === true || data.message)) {
           box.textContent = 'Thanks! Your message has been sent. We will reply to your email.';
           box.className = 'status ok';
