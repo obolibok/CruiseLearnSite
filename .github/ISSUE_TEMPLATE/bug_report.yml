@@ -1,0 +1,37 @@
+name: "🐞 Bug Report"
+description: "Report a problem or unexpected behavior"
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "Bug description"
+      description: "What happened? Describe the issue in detail."
+      placeholder: "When pressing Play, playback does not start..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to reproduce"
+      description: "How can we reproduce the bug?"
+      placeholder: |
+        1. Open the app
+        2. Go to a playlist
+        3. Tap Play
+        4. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected behavior"
+      placeholder: "Playback should start from the first topic..."
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: "Screenshots / logs"
+      description: "If applicable, add screenshots or logs to help explain the problem."
