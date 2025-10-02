@@ -1,4 +1,4 @@
-﻿# 📝 CruiseLearn Issue Templates
+# 📝 CruiseLearn Issue Templates
 
 Welcome to the CruiseLearn issue tracker!  
 Please choose the most appropriate template when opening a new issue:
