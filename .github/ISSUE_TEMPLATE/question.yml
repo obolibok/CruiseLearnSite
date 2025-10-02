@@ -1,0 +1,19 @@
+name: "❓ Question / Help"
+description: "Ask a question or request help"
+labels: ["question"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: "Your question"
+      description: "What do you want to know or need help with?"
+      placeholder: "How can I import a custom playlist?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "Additional context"
+      description: "Add any details that might help us understand your question."
+      placeholder: "I tried exporting and re-importing but got an error..."

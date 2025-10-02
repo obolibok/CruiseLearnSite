@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🌐 CruiseLearn Website
+    url: https://cruiselearn.app
+    about: "Visit the official CruiseLearn website"
+  - name: 📧 Email Support
+    url: mailto:cruiselearnapp@gmail.com
+    about: "For issues that don’t belong on GitHub, please email us"

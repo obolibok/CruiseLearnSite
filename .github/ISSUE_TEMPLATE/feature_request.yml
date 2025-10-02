@@ -1,0 +1,27 @@
+name: "✨ Feature Request"
+description: "Suggest a new feature or improvement"
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: "What’s your idea?"
+      description: "Describe the feature or improvement you’d like to see."
+      placeholder: "Add an option for background music..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: value
+    attributes:
+      label: "Why is this needed?"
+      description: "How would this help users?"
+      placeholder: "This would make learning more comfortable and engaging..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatives"
+      description: "Are there any alternative solutions or workarounds?"
