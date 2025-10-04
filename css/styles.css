@@ -191,6 +191,4 @@ footer{
   display: block;
   mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
   -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
-  max-width :100%;
-  margin:1rem 0;
 }
