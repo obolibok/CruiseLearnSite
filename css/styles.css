@@ -180,3 +180,17 @@ footer{
     margin-right: 1rem;
   }
 }
+.screenshot {
+  position: relative;
+  overflow: hidden;
+  max-height: 600px;
+}
+
+.screenshot img {
+  width: 100%;
+  display: block;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
+  max-width :100%;
+  margin:1rem 0;
+}
