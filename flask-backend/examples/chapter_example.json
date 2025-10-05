@@ -1,0 +1,22 @@
+{
+  "type": "chapter_collection",
+  "version": 1,
+  "chapters": [
+    {
+      "name": "Verben aus Text XY",
+      "description": "Глаголы из текста о путешествиях",
+      "primaryLanguage": "de",
+      "secondaryLanguage": "ru",
+      "topics": [
+        {
+          "primaryText": "fahren",
+          "secondaryText": "ехать"
+        },
+        {
+          "primaryText": "sehen",
+          "secondaryText": "видеть"
+        }
+      ]
+    }
+  ]
+}

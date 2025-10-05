@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cruise Learn — AI Generator</title>
+  <style>
+    body { font-family: sans-serif; margin: 40px auto; max-width: 700px; background: #fafafa; color: #333; }
+    textarea { width: 100%; height: 120px; font-size: 14px; padding: 8px; }
+    input, select { width: 100%; font-size: 14px; padding: 6px; margin-top: 4px; }
+    button { margin-top: 12px; padding: 10px 20px; font-size: 15px; cursor: pointer;
+      background: #2196f3; color: white; border: none; border-radius: 6px; }
+    pre { background: #272822; color: #f8f8f2; padding: 12px; border-radius: 6px;
+      white-space: pre-wrap; word-wrap: break-word; margin-top: 16px; }
+    .row { display: flex; gap: 10px; }
+    .row > div { flex: 1; }
+  </style>
+</head>
+<body>
+  <h1>🧠 Cruise Learn AI Generator</h1>
+  <p>Введите текст, выберите модель и провайдера. Если Ollama установлена локально — она будет выбрана автоматически.</p>
+
+  <label>Исходный текст:</label>
+  <textarea id="text">Ich fahre nach Berlin und sehe viele Autos.</textarea>
+
+  <label>Целевой язык:</label>
+  <select id="target_lang">
+    <option value="ru">Русский</option>
+    <option value="en">Английский</option>
+    <option value="de">Немецкий</option>
+  </select>
+
+  <label>Инструкция:</label>
+  <input id="instruction" value="Выбери все глаголы и переведи их" />
+
+  <div class="row">
+    <div>
+      <label>Провайдер:</label>
+      <select id="provider">
+        <option value="ollama">Ollama (локально)</option>
+        <option value="openai">OpenAI</option>
+        <option value="openrouter">OpenRouter.ai</option>
+      </select>
+    </div>
+    <div>
+      <label>Модель:</label>
+      <select id="model"></select>
+    </div>
+  </div>
+
+  <label>API Key (для OpenAI / OpenRouter):</label>
+  <input id="api_key" placeholder="sk-... (можно оставить пустым, если есть в .env)" />
+
+  <button id="refreshModels">🔄 Обновить список моделей</button>
+  <button id="generate">Сгенерировать</button>
+
+  <h3>Результат:</h3>
+  <pre id="result"></pre>
+
+  <button id="download" style="display:none;">💾 Скачать JSON</button>
+
+<script>
+  const result = document.getElementById("result");
+  const providerSelect = document.getElementById("provider");
+  const modelSelect = document.getElementById("model");
+
+  // --- Загружаем список моделей при старте ---
+  async function loadModels(auto = true) {
+    result.textContent = "📡 Загружаю список моделей...";
+    try {
+      // читаем текущего выбранного провайдера, чтобы не затирать ручной выбор
+      const currentProvider = providerSelect.value;
+
+      // добавляем ?provider=... чтобы сервер вернул правильный список
+      const res = await fetch("/models?provider=" + encodeURIComponent(currentProvider));
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.statusText);
+
+      // очистить список моделей
+      modelSelect.innerHTML = "";
+      data.models.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = m;
+        modelSelect.appendChild(opt);
+      });
+
+      // если авто-загрузка при старте — выставляем дефолтный провайдер из backend
+      if (auto) {
+        providerSelect.value = data.provider;
+      }
+
+      result.textContent = `✅ Загрузено ${data.models.length} моделей (${auto ? data.provider : currentProvider})`;
+    } catch (e) {
+      result.textContent = "❌ Ошибка загрузки моделей: " + e.message;
+    }
+  }
+
+  // --- Кнопка ручного обновления ---
+  document.getElementById("refreshModels").addEventListener("click", () => loadModels(false));
+
+  // --- Генерация контента ---
+  document.getElementById("generate").addEventListener("click", async () => {
+    result.textContent = "⏳ Генерация...";
+    const payload = {
+      text: document.getElementById("text").value,
+      target_lang: document.getElementById("target_lang").value,
+      instruction: document.getElementById("instruction").value,
+      api_key: document.getElementById("api_key").value,
+      model: modelSelect.value,
+      provider: providerSelect.value
+    };
+
+    const res = await fetch("/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    result.textContent = JSON.stringify(data, null, 2);
+
+    const dlBtn = document.getElementById("download");
+    if (res.ok) {
+      dlBtn.style.display = "inline-block";
+      dlBtn.onclick = () => {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "cruiselearn_generated.json";
+        a.click();
+      };
+    } else dlBtn.style.display = "none";
+  });
+
+  // --- Автозагрузка при открытии страницы ---
+  loadModels(true);
+</script>
+</body>
+</html>
