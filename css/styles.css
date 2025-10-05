@@ -166,6 +166,13 @@ footer{
   margin-top: 0;
 }
 
+.help-content img {
+  display: block;
+  margin: 1rem auto;
+  max-width: 100%;
+  height: auto;
+}
+
 @media (max-width: 768px) {
   .help-container {
     flex-direction: column;
@@ -182,7 +189,6 @@ footer{
 }
 .screenshot {
   position: relative;
-  overflow: hidden;
   max-height: 600px;
 }
 
@@ -191,4 +197,15 @@ footer{
   display: block;
   mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
   -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
+}
+
+.caption {
+  text-align: center;
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.55);
+  margin-top: -0.25rem;
+  margin-bottom: 1.5rem;
+  font-style: italic;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 0.3rem;
 }
