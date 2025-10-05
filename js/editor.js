@@ -77,6 +77,9 @@
     const gridOptions = {
       theme: agGrid.themeQuartzDark,
       columnDefs,
+	  cellSelection: true,
+	  undoRedoCellEditing: true,
+      undoRedoCellEditingLimit: 200,
       enterNavigatesVertically: true,               // NEW: Excel-like Enter (вниз в режиме просмотра)
       enterNavigatesVerticallyAfterEdit: true,      // NEW: и после редактирования — сохранить и вниз
       getRowId: params => params.data.id,           // NEW: быстрый доступ к rowNode
@@ -151,9 +154,6 @@
 
     const api = agGrid.createGrid(gridDiv, gridOptions);
     // Clipboard handlers (robust copy/cut/paste)
-    gridDiv.addEventListener('copy', onCopy);
-    gridDiv.addEventListener('cut', onCut);
-    gridDiv.addEventListener('paste', onPaste);
     const DEBUG = false;
     const dbg = (...a) => { if (DEBUG) console.log('[editor]', ...a); };
     gridOptions.api = api;
@@ -173,6 +173,100 @@
       const list = api.getCellEditorInstances ? api.getCellEditorInstances() : [];
       return list && list.length > 0;
     }
+
+    // --- clipboard fallback helpers (only when AG Grid doesn't handle it) ---
+    function isInsideGrid(el){
+      return !!el && gridDiv.contains(el);
+    }
+    function hasRangeSelection(){
+      try{
+        return typeof api.getCellRanges === 'function' && (api.getCellRanges() || []).length > 0;
+      }catch(_){ return false; }
+    }
+
+    function onCopyFallback(e){
+      if (!isInsideGrid(e.target)) return;
+      if (isEditingInput(e.target) || isGridEditing()) return;   // let browser/editor handle
+      if (hasRangeSelection()) return;                            // let AG Grid handle ranges
+
+      const f = api.getFocusedCell?.();
+      if (!f) return;
+      const node = api.getDisplayedRowAtIndex(f.rowIndex);
+      if (!node) return;
+      const field = f.column.getColId();
+      const row = node.data || {};
+      if (!allowedFieldForRow(row, field)) return;
+
+      const val = row[field] ?? '';
+      if (e.clipboardData){
+        e.clipboardData.setData('text/plain', String(val));
+        e.preventDefault();
+      }
+    }
+
+    function onCutFallback(e){
+      if (!isInsideGrid(e.target)) return;
+      if (isEditingInput(e.target) || isGridEditing()) return;
+      if (hasRangeSelection()) return;
+
+      // Reuse copy fallback
+      onCopyFallback(e);
+      if (!e.defaultPrevented) return;
+
+      // Clear focused cell
+      const f = api.getFocusedCell?.();
+      if (!f) return;
+      const node = api.getDisplayedRowAtIndex(f.rowIndex);
+      if (!node) return;
+      const field = f.column.getColId();
+      const row = node.data || {};
+      if (!allowedFieldForRow(row, field)) return;
+
+      node.setDataValue(field, '');
+    }
+
+    function onPasteFallback(e){
+      if (!isInsideGrid(e.target)) return;
+      if (isEditingInput(e.target) || isGridEditing()) return; // native paste into editor
+      if (hasRangeSelection()) return;                         // AG Grid handles ranges
+
+      if (!e.clipboardData) return;
+      const text = e.clipboardData.getData('text/plain');
+      if (!text) return;
+
+      const f = api.getFocusedCell?.();
+      if (!f) return;
+      const startNode  = api.getDisplayedRowAtIndex(f.rowIndex);
+      if (!startNode) return;
+      const startField = f.column.getColId();
+
+      if (!allowedFieldForRow(startNode.data, startField)) { e.preventDefault(); return; }
+
+      // Parse matrix (tabs/newlines)
+      const rows = text.replace(/\r/g,'').split('\n').filter(l => l.length>0).map(l => l.split('\t'));
+      const visibleCols = api.getAllDisplayedColumns().map(c => c.getColId());
+      const startColIdx = visibleCols.indexOf(startField);
+
+      let applied = false;
+      for (let r = 0; r < rows.length; r++){
+        const rowNode = api.getDisplayedRowAtIndex(f.rowIndex + r);
+        if (!rowNode) break;
+        const rowData = rowNode.data;
+        for (let c = 0; c < rows[r].length; c++){
+          const colId = visibleCols[startColIdx + c];
+          if (!colId) break;
+          if (!allowedFieldForRow(rowData, colId)) continue;
+          rowNode.setDataValue(colId, rows[r][c]);
+          applied = true;
+        }
+      }
+      if (applied) e.preventDefault();
+    }
+
+    // Attach document-level listeners (fallback only; AG Grid will handle first where applicable)
+    document.addEventListener('copy', onCopyFallback);
+    document.addEventListener('cut', onCutFallback);
+    document.addEventListener('paste', onPasteFallback);
     // ---------- Utilities ----------
     const defer = (fn) => requestAnimationFrame(fn); // NEW: переносим тяжёлые операции из keydown
 
@@ -601,80 +695,6 @@ function allowedFieldForRow(rowData, field){
   if (field === 'structure') return false;
   const allowed = rowData.type === 'chapter' ? COLS.chapter : COLS.topic;
   return allowed.includes(field);
-}
-
-function onCopy(e){
-  // если сейчас редактируем поле — не вмешиваемся
-  if (isEditingInput(e.target) || isGridEditing()) return;
-
-  const f = api.getFocusedCell();
-  if (!f) return;
-  const node = api.getDisplayedRowAtIndex(f.rowIndex);
-  if (!node) return;
-  const field = f.column.getColId();
-  const row = node.data || {};
-  if (!allowedFieldForRow(row, field)) return;
-
-  const val = row[field] ?? '';
-  e.clipboardData.setData('text/plain', String(val));
-  e.preventDefault();
-}
-
-function onCut(e){
-  // при редактировании — отдать браузеру
-  if (isEditingInput(e.target) || isGridEditing()) return;
-
-  onCopy(e); // скопировали
-  if (e.defaultPrevented){ // мы взяли управление
-    const f = api.getFocusedCell();
-    if (!f) return;
-    const node = api.getDisplayedRowAtIndex(f.rowIndex);
-    if (!node) return;
-    const field = f.column.getColId();
-    const row = node.data || {};
-    if (!allowedFieldForRow(row, field)) return;
-    node.setDataValue(field, ''); // очистили
-  }
-}
-
-
-function onPaste(e){
-  // если редактируем — не перехватываем: вставка пойдёт в каретку
-  if (isEditingInput(e.target) || isGridEditing()) return;
-
-  const text = e.clipboardData.getData('text/plain');
-  if (!text) return;
-
-  const f = api.getFocusedCell();
-  if (!f) return;
-  const startNode = api.getDisplayedRowAtIndex(f.rowIndex);
-  if (!startNode) return;
-  const startField = f.column.getColId();
-
-  if (!allowedFieldForRow(startNode.data, startField)){
-    e.preventDefault();
-    return;
-  }
-
-  const lines = text.replace(/\r/g,'').split('\n');
-  const rowsParsed = lines.filter(l => l.length>0).map(l => l.split('\t'));
-
-  const visibleCols = api.getAllDisplayedColumns().map(c => c.getColId());
-  const startColIdx = visibleCols.indexOf(startField);
-
-  for (let r = 0; r < rowsParsed.length; r++){
-    const rowNode = api.getDisplayedRowAtIndex(f.rowIndex + r);
-    if (!rowNode) break;
-    const rowData = rowNode.data;
-
-    for (let c = 0; c < rowsParsed[r].length; c++){
-      const colId = visibleCols[startColIdx + c];
-      if (!colId) break;
-      if (!allowedFieldForRow(rowData, colId)) continue;
-      rowNode.setDataValue(colId, rowsParsed[r][c]);
-    }
-  }
-  e.preventDefault();
 }
 
     // Demo: ?demo=1
