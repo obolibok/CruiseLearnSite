@@ -90,6 +90,21 @@
         suppressKeyboardEvent: (params) => {
           const e = params.event;
           if (!e) return false;
+		  if (e.key === 'Escape') {
+            if (isGridEditing()) {
+              e.preventDefault(); e.stopPropagation();
+              const rowIndex = params.node.rowIndex;
+              const colId    = params.column.getColId();
+              setTimeout(() => {
+                api.stopEditing(true);                // cancel edit
+                api.setFocusedCell(rowIndex, colId);  // вернуть фокус в ту же ячейку
+                api.ensureIndexVisible(rowIndex);
+              }, 0);
+              return true;
+            }
+            e.preventDefault(); e.stopPropagation();
+            return true;
+          }
           // НЕ трогаем Enter — за него отвечают флаги выше
           // не трогаем Ctrl+C / Ctrl+V
           if (e.ctrlKey && (e.key === 'c' || e.key === 'v')) return false;
