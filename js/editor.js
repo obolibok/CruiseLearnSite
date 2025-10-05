@@ -162,7 +162,17 @@
     api.addEventListener('cellValueChanged', (ev) => {
       api.redrawRows({ rowNodes: [ev.node] }); // точечно снимаем «красную полосу»
     });
-
+    // --- editing guards ---
+    function isEditingInput(el){
+      if (!el) return false;
+      const tag = (el.tagName || '').toUpperCase();
+      return tag === 'INPUT' || tag === 'TEXTAREA' || el.isContentEditable === true
+             || el.classList?.contains('ag-text-field-input');
+    }
+    function isGridEditing(){
+      const list = api.getCellEditorInstances ? api.getCellEditorInstances() : [];
+      return list && list.length > 0;
+    }
     // ---------- Utilities ----------
     const defer = (fn) => requestAnimationFrame(fn); // NEW: переносим тяжёлые операции из keydown
 
@@ -594,21 +604,9 @@ function allowedFieldForRow(rowData, field){
 }
 
 function onCopy(e){
-  const f = api.getFocusedCell();
-  if (!f) return; // нет фокуса на решётке — отдать браузеру
-  const node = api.getDisplayedRowAtIndex(f.rowIndex);
-  if (!node) return;
-  const field = f.column.getColId();
-  const row = node.data || {};
-  if (!allowedFieldForRow(row, field)) return; // «серые»/Structure не копируем
+  // если сейчас редактируем поле — не вмешиваемся
+  if (isEditingInput(e.target) || isGridEditing()) return;
 
-  const val = row[field] ?? '';
-  e.clipboardData.setData('text/plain', String(val));
-  e.preventDefault(); // мы всё сделали сами
-}
-
-function onCut(e){
-  onCopy(e); // скопировали
   const f = api.getFocusedCell();
   if (!f) return;
   const node = api.getDisplayedRowAtIndex(f.rowIndex);
@@ -616,10 +614,34 @@ function onCut(e){
   const field = f.column.getColId();
   const row = node.data || {};
   if (!allowedFieldForRow(row, field)) return;
-  node.setDataValue(field, ''); // очистили
+
+  const val = row[field] ?? '';
+  e.clipboardData.setData('text/plain', String(val));
+  e.preventDefault();
 }
 
+function onCut(e){
+  // при редактировании — отдать браузеру
+  if (isEditingInput(e.target) || isGridEditing()) return;
+
+  onCopy(e); // скопировали
+  if (e.defaultPrevented){ // мы взяли управление
+    const f = api.getFocusedCell();
+    if (!f) return;
+    const node = api.getDisplayedRowAtIndex(f.rowIndex);
+    if (!node) return;
+    const field = f.column.getColId();
+    const row = node.data || {};
+    if (!allowedFieldForRow(row, field)) return;
+    node.setDataValue(field, ''); // очистили
+  }
+}
+
+
 function onPaste(e){
+  // если редактируем — не перехватываем: вставка пойдёт в каретку
+  if (isEditingInput(e.target) || isGridEditing()) return;
+
   const text = e.clipboardData.getData('text/plain');
   if (!text) return;
 
@@ -629,17 +651,14 @@ function onPaste(e){
   if (!startNode) return;
   const startField = f.column.getColId();
 
-  // Если ячейка недоступна — не вставляем
   if (!allowedFieldForRow(startNode.data, startField)){
     e.preventDefault();
     return;
   }
 
-  // Поддержим и одиночное значение, и «матрицу» (таб/переносы строк)
   const lines = text.replace(/\r/g,'').split('\n');
   const rowsParsed = lines.filter(l => l.length>0).map(l => l.split('\t'));
 
-  // Карта видимых колонок, чтобы пастить вправо
   const visibleCols = api.getAllDisplayedColumns().map(c => c.getColId());
   const startColIdx = visibleCols.indexOf(startField);
 
@@ -651,12 +670,11 @@ function onPaste(e){
     for (let c = 0; c < rowsParsed[r].length; c++){
       const colId = visibleCols[startColIdx + c];
       if (!colId) break;
-      if (!allowedFieldForRow(rowData, colId)) continue; // пропускаем «серые»/чужие поля
+      if (!allowedFieldForRow(rowData, colId)) continue;
       rowNode.setDataValue(colId, rowsParsed[r][c]);
     }
   }
-
-  e.preventDefault(); // не отдаём событие дальше
+  e.preventDefault();
 }
 
     // Demo: ?demo=1
