@@ -93,8 +93,8 @@
           if (!e) return false;
 		  if (e.key === 'Escape') {
             if (isGridEditing()) return false;        // редактируем → стандартное поведение AG Grid
-            //e.preventDefault(); 
-            //e.stopPropagation();
+            e.preventDefault(); 
+            e.stopPropagation();
             return true;                              // НЕ редактируем → ничего не делаем
           }
           // НЕ трогаем Enter — за него отвечают флаги выше
