@@ -77,7 +77,6 @@
     const gridOptions = {
       theme: agGrid.themeQuartzDark,
       columnDefs,
-	  cellSelection: true,
 	  undoRedoCellEditing: true,
       undoRedoCellEditingLimit: 200,
       enterNavigatesVertically: true,               // NEW: Excel-like Enter (вниз в режиме просмотра)
@@ -91,12 +90,6 @@
         suppressKeyboardEvent: (params) => {
           const e = params.event;
           if (!e) return false;
-		  if (e.key === 'Escape') {
-            if (isGridEditing()) return false;        // редактируем → стандартное поведение AG Grid
-            e.preventDefault(); 
-            e.stopPropagation();
-            return true;                              // НЕ редактируем → ничего не делаем
-          }
           // НЕ трогаем Enter — за него отвечают флаги выше
           // не трогаем Ctrl+C / Ctrl+V
           if (e.ctrlKey && (e.key === 'c' || e.key === 'v')) return false;
