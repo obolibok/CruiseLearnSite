@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Help - Cruise Learn</title>
+  <link rel="stylesheet" href="css/styles.css?v=2025-09-28">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll("pre.json").forEach(block => {
+    let text = block.textContent.trim();
+
+    // Escape HTML entities
+    text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    // Highlight JSON tokens
+    text = text
+      .replace(/"([^"]+)"(?=\s*:)/g, '<span class="json-key">"$1"</span>')  // keys
+      .replace(/:\s*"([^"]*)"/g, ': <span class="json-string">"$1"</span>') // strings
+      .replace(/:\s*(\b\d+\b)/g, ': <span class="json-number">$1</span>')   // numbers
+      .replace(/:\s*(true|false|null)/g, ': <span class="json-boolean">$1</span>'); // bools
+
+    block.innerHTML = text;
+  });
+});
+</script>
+</head>
+<body>
+  <div class="page_header">
+    <h1>Cruise Learn</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="help.html">Help</a>
+      <a href="editor.html">Content Editor</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+
+  <main>
+<div class="help-container">
+  <aside class="help-menu">
+    <h2>Help</h2>
+    <a href="help.html">About</a>
+    <a href="getting-started.html">Getting Started</a>
+    <a href="main-screen.html">Main Screen</a>
+    <a href="features.html">Features</a>
+    <a href="playlists.html">Playlists</a>
+    <a href="library.html">Library</a>
+    <a href="import-export.html">Import &amp; Export</a>
+    <a href="content-preparation.html" class="active">Content Preparation</a>
+    <a href="faq.html">FAQ</a>
+    <a href="testers.html">For Testers</a>
+    <a href="contact.html">Contact</a>
+  </aside>
+
+  <section class="help-content">
+    <h2>Content Preparation</h2>
+
+    <h3>Overview</h3>
+    <p>
+      Cruise Learn uses a structured content model for language learning. 
+      Materials are stored as <strong>Chapters</strong> containing <strong>Topics</strong>, 
+      and can be combined into a <strong>chapter_collection</strong> file for easy import or export.
+    </p>
+
+    <h3>Structure</h3>
+    <p>
+      Each topic represents a single pair of <em>primary</em> and <em>secondary</em> texts.
+      Chapters define which languages are used, and the app handles playback and display automatically.
+    </p>
+<pre class="json">{
+  "type": "chapter_collection",
+  "version": 1,
+  "chapters": [
+    {
+      "name": "Example Chapter",
+      "description": "Sample content for German learning",
+      "primaryLanguage": "de",
+      "secondaryLanguage": "en",
+      "topics": [
+        { "primaryText": "das Haus", "secondaryText": "the house" },
+        { "primaryText": "die Zeit", "secondaryText": "the time" }
+      ]
+    }
+  ]
+}
+</pre>
+    <p class="caption">Basic content structure in JSON</p>
+
+<h3>Creating Content</h3>
+<p>
+  You can create new learning materials in two ways:
+</p>
+<ul>
+  <li><strong>Inside the app</strong> — create chapters and add topics manually.</li>
+  <li><strong>Externally</strong> — prepare a JSON file and import it into the app.</li>
+</ul>
+
+<p>
+  Additionally, Cruise Learn provides a <strong><a href="editor.html">Content Editor</a></strong> that lets you 
+  <em>create, edit, and preview chapters</em> right in your browser.
+</p>
+<p>
+  The editor supports import and export of JSON files, 
+  live structure validation, and syntax highlighting for easier editing.
+</p>
+    <h3>Example Workflow</h3>
+    <p>
+      For larger sets, external preparation is recommended. 
+      Here’s how we created a complete set from Rammstein’s song <em>“Zeit”</em>:
+    </p>
+    <ol>
+      <li>Take the original text (lyrics, article, story, etc.).</li>
+      <li>Extract parts of speech — nouns, verbs, adjectives, adverbs.</li>
+      <li>Translate them into the secondary language.</li>
+      <li>Organize each group into a separate chapter.</li>
+      <li>Combine all chapters into one JSON file and save it, for example as <code>zeit_chapters_en.json</code>.</li>
+      <li>Import the file via <strong>Library → Import</strong> in the app.</li>
+    </ol>
+
+<h3>Full Example: From Text to Chapter Collection</h3>
+<p>
+  Below you can see the complete process — from the original text to the generated JSON file.
+</p>
+
+<details>
+  <summary>Original text (lyrics of "Zeit" by Rammstein)</summary>
+  <pre>
+Manches sollte, manches nicht
+Wir sehen, doch sind wir blind
+Wir werfen Schatten ohne Licht
+Nach uns wird es vorher geben
+Aus der Jugend wird schon Not
+Wir sterben weiter, bis wir leben
+Sterben lebend in den Tod
+Dem Ende treiben wir entgegen
+Keine Rast, nur vorwärtsstreben
+Am Ufer winkt Unendlichkeit
+Gefangen so im Fluss der Zeit
+Bitte bleib stehen, bleib stehen
+Zeit, das soll immer so weitergehen
+Warmer Körper ist bald kalt
+Zukunft kann man nicht beschwören
+Duldet keinen Aufenthalt
+Erschaffen und sogleich zerstören
+Ich liege hier in deinen Armen
+Ach, könnt es doch für immer sein
+Doch die Zeit kennt kein Erbarmen
+Schon ist der Moment vorbei
+Zeit, bitte bleib stehen, bleib stehen
+Zeit, das soll immer so weitergehen
+Zeit, es ist so schön, so schön
+Ein jeder kennt den perfekten Moment
+Zeit, bitte bleib stehen, bleib stehen
+Wenn unsere Zeit gekommen ist
+Dann ist es Zeit zu gehen
+Aufhören, wenn's am schönsten ist
+Die Uhren bleiben stehen
+So perfekt ist der Moment
+Doch weiter läuft die Zeit
+Augenblick, verweile doch
+Ich bin noch nicht bereit
+Zeit, bitte bleib stehen, bleib stehen
+Zeit, das soll immer so weitergehen
+Zeit, es ist so schön, so schön
+Ein jeder kennt den perfekten Moment
+  </pre>
+</details>
+
+<details>
+  <summary>Example of the AI request</summary>
+  <pre>
+You are a German linguist.
+Pay attention to the gender and correct articles of nouns.
+Create several sections corresponding to parts of speech.
+Primary language is German, secondary is English.
+Select all nouns, restore the correct articles (der/die/das), and translate them into English.
+Select all verbs, convert them to infinitive form, and if a verb has a separable prefix, write that prefix in parentheses both in German and English.
+Select all adjectives, convert them to masculine form, and translate into English.
+Select all adverbs and translate them into English as well.
+Process the text below:
+  </pre>
+</details>
+
+<details>
+  <summary>Resulting JSON (ready for import)</summary>
+  <pre class="json">
+{
+  "type": "chapter_collection",
+  "version": 1,
+  "chapters": [
+    {
+      "name": "Substantive aus dem Lied 'Zeit'",
+      "description": "Nouns with correct articles and English translations",
+      "primaryLanguage": "de",
+      "secondaryLanguage": "en",
+      "topics": [
+        { "primaryText": "das Manches", "secondaryText": "the something / some things" },
+        { "primaryText": "der Schatten", "secondaryText": "the shadow" },
+        { "primaryText": "das Licht", "secondaryText": "the light" },
+        { "primaryText": "die Jugend", "secondaryText": "the youth" },
+        { "primaryText": "der Tod", "secondaryText": "the death" },
+        { "primaryText": "das Ende", "secondaryText": "the end" },
+        { "primaryText": "die Rast", "secondaryText": "the rest (pause)" },
+        { "primaryText": "das Ufer", "secondaryText": "the shore" },
+        { "primaryText": "die Unendlichkeit", "secondaryText": "the infinity" },
+        { "primaryText": "der Fluss", "secondaryText": "the river" },
+        { "primaryText": "die Zeit", "secondaryText": "the time" },
+        { "primaryText": "der Körper", "secondaryText": "the body" },
+        { "primaryText": "die Zukunft", "secondaryText": "the future" },
+        { "primaryText": "der Aufenthalt", "secondaryText": "the stay" },
+        { "primaryText": "die Arme", "secondaryText": "the arms" },
+        { "primaryText": "der Moment", "secondaryText": "the moment" },
+        { "primaryText": "das Erbarmen", "secondaryText": "the mercy" },
+        { "primaryText": "die Uhren", "secondaryText": "the clocks" },
+        { "primaryText": "der Augenblick", "secondaryText": "the instant / moment" }
+      ]
+    },
+    {
+      "name": "Verben aus dem Lied 'Zeit'",
+      "description": "Verbs in infinitive form with separable prefixes and English translations",
+      "primaryLanguage": "de",
+      "secondaryLanguage": "en",
+      "topics": [
+        { "primaryText": "sollen", "secondaryText": "shall / should" },
+        { "primaryText": "sehen", "secondaryText": "to see" },
+        { "primaryText": "sein", "secondaryText": "to be" },
+        { "primaryText": "werfen", "secondaryText": "to throw" },
+        { "primaryText": "geben", "secondaryText": "to give" },
+        { "primaryText": "werden", "secondaryText": "to become" },
+        { "primaryText": "sterben", "secondaryText": "to die" },
+        { "primaryText": "leben", "secondaryText": "to live" },
+        { "primaryText": "treiben", "secondaryText": "to drive / push" },
+        { "primaryText": "entgegen*treiben*", "secondaryText": "(entgegen) to drive towards" },
+        { "primaryText": "bleiben", "secondaryText": "to stay" },
+        { "primaryText": "winken", "secondaryText": "to wave" },
+        { "primaryText": "gefangen sein", "secondaryText": "to be caught" },
+        { "primaryText": "liegen", "secondaryText": "to lie" },
+        { "primaryText": "können", "secondaryText": "can / be able" },
+        { "primaryText": "beschwören", "secondaryText": "to conjure / swear" },
+        { "primaryText": "dulden", "secondaryText": "to tolerate" },
+        { "primaryText": "erschaffen", "secondaryText": "to create" },
+        { "primaryText": "zerstören", "secondaryText": "to destroy" },
+        { "primaryText": "kennen", "secondaryText": "to know" },
+        { "primaryText": "auf*hören*", "secondaryText": "(auf) to stop" },
+        { "primaryText": "verweilen", "secondaryText": "to linger" },
+        { "primaryText": "laufen", "secondaryText": "to run" }
+      ]
+    },
+    {
+      "name": "Adjektive aus dem Lied 'Zeit'",
+      "description": "Adjectives in masculine form with English translations",
+      "primaryLanguage": "de",
+      "secondaryLanguage": "en",
+      "topics": [
+        { "primaryText": "blind", "secondaryText": "blind" },
+        { "primaryText": "lebend", "secondaryText": "living" },
+        { "primaryText": "gekommen", "secondaryText": "come (arrived)" },
+        { "primaryText": "warm", "secondaryText": "warm" },
+        { "primaryText": "kalt", "secondaryText": "cold" },
+        { "primaryText": "schön", "secondaryText": "beautiful" },
+        { "primaryText": "perfekt", "secondaryText": "perfect" },
+        { "primaryText": "bereit", "secondaryText": "ready" }
+      ]
+    },
+    {
+      "name": "Adverbien aus dem Lied 'Zeit'",
+      "description": "Adverbs with English translations",
+      "primaryLanguage": "de",
+      "secondaryLanguage": "en",
+      "topics": [
+        { "primaryText": "doch", "secondaryText": "yet / still" },
+        { "primaryText": "nach", "secondaryText": "after" },
+        { "primaryText": "vorwärts", "secondaryText": "forward" },
+        { "primaryText": "bald", "secondaryText": "soon" },
+        { "primaryText": "schon", "secondaryText": "already" },
+        { "primaryText": "immer", "secondaryText": "always" },
+        { "primaryText": "nur", "secondaryText": "only" },
+        { "primaryText": "so", "secondaryText": "so / thus" }
+      ]
+    }
+  ]
+}
+  </pre>
+</details>
+<br/>
+    <h3>Validation</h3>
+    <p>
+      If import fails, verify that:
+    </p>
+    <ul>
+      <li><strong>type</strong> is <em>"chapter_collection"</em></li>
+      <li>Each chapter object has a <strong>topics</strong> array</li>
+      <li>All text fields use quotes</li>
+    </ul>
+
+    <h3>Summary</h3>
+    <ol>
+      <li>Collect source text</li>
+      <li>Extract words by part of speech</li>
+      <li>Translate and structure pairs</li>
+      <li>Create JSON file</li>
+      <li>Import into the app</li>
+    </ol>
+  </section>
+</div>
+  </main>
+  <footer>
+    <p>&copy; 2025 Cruise Learn</p>
+  </footer>
+</body>
+</html>
